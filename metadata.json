@@ -1,0 +1,5 @@
+{
+  "name": "Community Fund Ledger v2",
+  "description": "Full-featured financial management dashboard with PKR support, role-based access, CRUD capabilities, and live analytics for community funds.",
+  "requestFramePermissions": []
+}
