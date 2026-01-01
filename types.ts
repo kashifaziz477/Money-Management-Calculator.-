@@ -1,4 +1,9 @@
 
+export interface Distribution {
+  recipient: string;
+  amount: number;
+}
+
 export interface MonthlyRecord {
   id: string;
   month: string;
@@ -7,6 +12,7 @@ export interface MonthlyRecord {
   amountGiven: number;
   remainingBalance: number;
   cumulativeBalance: number;
+  distributions?: Distribution[];
 }
 
 export interface FundSummary {

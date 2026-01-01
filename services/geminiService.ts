@@ -10,8 +10,9 @@ export const generateFinancialData = async (): Promise<FinancialData> => {
     contents: `Generate a realistic 12-month financial dataset for a community fund in Pakistan (values in PKR) starting from January. 
     The fund consists of roughly 5-10 friends. 
     Monthly contributions should vary between 50,000 and 250,000 PKR. 
-    Monthly distributions to people in need should vary between 30,000 and 200,000 PKR.
-    Ensure some months have higher contributions (like Ramadan/Eid/Wedding seasons) and some months have higher distributions (like flood relief or winter support).`,
+    Monthly distributions should vary between 30,000 and 200,000 PKR.
+    For each month, provide a list of distributions with specific recipient names (e.g., "Local School Fee", "Widow Support (Naseem)", "Medical Bill (Aslam)", "Mosque Repair").
+    Ensure some months have higher contributions (like Ramadan/Eid/Wedding seasons) and some months have higher distributions.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -25,9 +26,19 @@ export const generateFinancialData = async (): Promise<FinancialData> => {
                 month: { type: Type.STRING },
                 contributorNames: { type: Type.ARRAY, items: { type: Type.STRING } },
                 amountCollected: { type: Type.NUMBER },
-                amountGiven: { type: Type.NUMBER }
+                distributions: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      recipient: { type: Type.STRING },
+                      amount: { type: Type.NUMBER }
+                    },
+                    required: ["recipient", "amount"]
+                  }
+                }
               },
-              required: ["month", "contributorNames", "amountCollected", "amountGiven"]
+              required: ["month", "contributorNames", "amountCollected", "distributions"]
             }
           }
         },
@@ -41,12 +52,14 @@ export const generateFinancialData = async (): Promise<FinancialData> => {
   const contributorsSet = new Set<string>();
 
   const records: MonthlyRecord[] = rawData.records.map((r: any) => {
-    const remaining = r.amountCollected - r.amountGiven;
+    const totalGiven = r.distributions.reduce((sum: number, d: any) => sum + d.amount, 0);
+    const remaining = r.amountCollected - totalGiven;
     cumulative += remaining;
     r.contributorNames.forEach((name: string) => contributorsSet.add(name));
     
     return {
       ...r,
+      amountGiven: totalGiven,
       remainingBalance: remaining,
       cumulativeBalance: cumulative
     };

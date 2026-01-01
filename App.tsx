@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User>({ role: 'guest', name: 'Viewer' });
+  const [user, setUser] = useState<User>({ role: 'admin', name: 'Administrator' }); // Default to admin for easier data entry
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MonthlyRecord | null>(null);
 
@@ -38,15 +38,16 @@ const App: React.FC = () => {
         }
       }
       
-      // Fallback to Gemini if nothing in storage
+      // If no data, we stay loading until we decide whether to fetch or stay empty
+      // For this app, we'll auto-fetch demo data once to show what it looks like
       try {
         const result = await generateFinancialData();
-        // Add random IDs to Gemini results
         const recordsWithId = result.records.map(r => ({...r, id: Math.random().toString(36).substr(2, 9)}));
         setRecords(recordsWithId);
       } catch (err) {
         console.error("Failed to load records:", err);
-        setError("Unable to generate financial data. Please ensure your API key is configured correctly.");
+        setError("Unable to generate example data. You can still add your own manually.");
+        setRecords([]);
       } finally {
         setLoading(false);
       }
@@ -72,10 +73,8 @@ const App: React.FC = () => {
       };
     });
 
-    // Auto-save to "Google Sheets" (simulated via local storage)
-    if (final.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(final));
-    }
+    // Auto-save to local storage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(final));
 
     return final;
   }, [records]);
@@ -104,7 +103,7 @@ const App: React.FC = () => {
   const handleSaveRecord = (formData: Partial<MonthlyRecord>) => {
     if (editingRecord) {
       // Update
-      setRecords(prev => prev.map(r => r.id === editingRecord.id ? { ...r, ...formData } : r));
+      setRecords(prev => prev.map(r => r.id === editingRecord.id ? { ...r, ...formData } as MonthlyRecord : r));
     } else {
       // Add
       const newRecord = {
@@ -128,10 +127,9 @@ const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const resetData = async () => {
-    if (window.confirm('Reset all data and fetch fresh example records?')) {
+  const resetToDemo = async () => {
+    if (window.confirm('Reset all data and fetch fresh example records from AI?')) {
       setLoading(true);
-      localStorage.removeItem(STORAGE_KEY);
       try {
         const result = await generateFinancialData();
         const recordsWithId = result.records.map(r => ({...r, id: Math.random().toString(36).substr(2, 9)}));
@@ -144,12 +142,19 @@ const App: React.FC = () => {
     }
   };
 
+  const clearAllData = () => {
+    if (window.confirm('Are you sure you want to delete ALL records? This will let you start entering your own data from scratch.')) {
+      setRecords([]);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
         <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-        <h2 className="text-slate-800 font-bold text-2xl mb-2">Syncing with Fund Database</h2>
-        <p className="text-slate-500 animate-pulse text-lg max-w-sm">Calculating 12-month balances and verifying contributor records...</p>
+        <h2 className="text-slate-800 font-bold text-2xl mb-2">Preparing Ledger</h2>
+        <p className="text-slate-500 animate-pulse text-lg max-w-sm">Synchronizing your local records...</p>
       </div>
     );
   }
@@ -172,7 +177,7 @@ const App: React.FC = () => {
             
             <div className="flex items-center gap-6">
               <div className="hidden md:flex flex-col items-end">
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full">
+                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full cursor-pointer hover:bg-slate-200 transition-colors" onClick={toggleRole}>
                   <span className={`w-2 h-2 rounded-full ${user.role === 'admin' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                   <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{user.role} Access</span>
                 </div>
@@ -187,7 +192,7 @@ const App: React.FC = () => {
                     onClick={toggleRole}
                     className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest block transition-colors"
                   >
-                    Switch to {user.role === 'admin' ? 'Guest' : 'Admin'}
+                    {user.role === 'admin' ? 'Logout' : 'Admin Login'}
                   </button>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white shadow-sm overflow-hidden group cursor-pointer" onClick={toggleRole}>
@@ -204,21 +209,28 @@ const App: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-3 text-blue-600 font-bold text-sm uppercase tracking-widest">
               <span className="w-8 h-[2px] bg-blue-600"></span>
-              2024 Financial Overview
+              Fund Management Dashboard
             </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Fund Transparency Portal</h2>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Your Community Ledger</h2>
             <p className="text-slate-500 max-w-2xl text-lg font-medium">
-              Real-time tracking of humanitarian aid distribution and community contributions across Pakistan.
+              Start adding your own monthly records to keep track of collections and distributions.
             </p>
           </div>
           
           <div className="flex flex-wrap gap-3">
             <button 
-              onClick={resetData}
+              onClick={clearAllData}
+              className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-rose-600 font-bold flex items-center gap-2 hover:bg-rose-50 hover:border-rose-100 transition-all text-sm shadow-sm"
+            >
+              <i className="fa-solid fa-trash-arrow-up"></i>
+              Clear All Data
+            </button>
+            <button 
+              onClick={resetToDemo}
               className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-slate-700 font-bold flex items-center gap-2 hover:bg-slate-50 hover:border-slate-200 transition-all text-sm shadow-sm"
             >
-              <i className="fa-solid fa-cloud-arrow-down"></i>
-              Cloud Reset
+              <i className="fa-solid fa-wand-sparkles"></i>
+              Demo Data
             </button>
             {user.role === 'admin' && (
               <button 
@@ -226,7 +238,7 @@ const App: React.FC = () => {
                 className="bg-blue-600 px-6 py-3 rounded-2xl text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition-all text-sm shadow-xl shadow-blue-200 active:scale-95"
               >
                 <i className="fa-solid fa-plus-circle"></i>
-                Add New Record
+                Add Record
               </button>
             )}
           </div>
@@ -235,8 +247,17 @@ const App: React.FC = () => {
         {/* Dashboard Cards */}
         <SummaryCards summary={summary} />
 
-        {/* Analytics Charts */}
-        <FinancialChart records={processedRecords} />
+        {/* Analytics Charts - Only show if data exists */}
+        {processedRecords.length > 0 ? (
+          <FinancialChart records={processedRecords} />
+        ) : (
+          <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-slate-200 text-center mb-8">
+             <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i className="fa-solid fa-chart-line"></i>
+             </div>
+             <p className="text-slate-400 font-medium">Add records to see financial trends and analytics.</p>
+          </div>
+        )}
 
         {/* Data Table */}
         <FinancialTable 
@@ -246,16 +267,16 @@ const App: React.FC = () => {
           onDelete={handleDelete}
         />
 
-        {/* Simulated Google Sheets Sync Status */}
+        {/* Sync Status / Footer */}
         <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-800 text-white p-8 rounded-[2rem] shadow-2xl shadow-slate-200">
           <div className="flex items-center gap-6">
             <div className="bg-emerald-500/20 p-4 rounded-2xl text-emerald-400">
-              <i className="fa-solid fa-square-check text-3xl"></i>
+              <i className="fa-solid fa-database text-3xl"></i>
             </div>
             <div>
-              <h4 className="text-xl font-bold mb-1">Connected to Google Sheets</h4>
+              <h4 className="text-xl font-bold mb-1">Local Data Storage Active</h4>
               <p className="text-slate-400 text-sm max-w-sm">
-                Last synced: {new Date().toLocaleTimeString()} • Encrypted transmission active.
+                All changes are saved automatically to your browser. Use the export feature for manual backups.
               </p>
             </div>
           </div>
@@ -263,7 +284,7 @@ const App: React.FC = () => {
              <div className="flex -space-x-3">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-700 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=${i}`} alt="user" />
+                    <img src={`https://i.pravatar.cc/100?u=user${i}`} alt="user" />
                   </div>
                 ))}
                 <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-600 flex items-center justify-center text-[10px] font-bold">
@@ -273,7 +294,7 @@ const App: React.FC = () => {
              <div className="h-10 w-[1px] bg-slate-700 hidden md:block"></div>
              <p className="text-sm font-medium text-slate-300 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Active Contributors
+                Active System
              </p>
           </div>
         </div>
