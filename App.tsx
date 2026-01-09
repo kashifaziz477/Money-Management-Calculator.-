@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { FinancialData, MonthlyRecord, User, Role } from './types';
 import { generateFinancialData } from './services/geminiService';
@@ -17,12 +16,10 @@ const STORAGE_KEY = 'community_fund_data';
 const App: React.FC = () => {
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User>({ role: 'admin', name: 'Administrator' }); // Default to admin for easier data entry
+  const [user, setUser] = useState<User>({ role: 'admin', name: 'Administrator' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MonthlyRecord | null>(null);
 
-  // Load from local storage or generate initial data
   useEffect(() => {
     const initData = async () => {
       setLoading(true);
@@ -38,15 +35,12 @@ const App: React.FC = () => {
         }
       }
       
-      // If no data, we stay loading until we decide whether to fetch or stay empty
-      // For this app, we'll auto-fetch demo data once to show what it looks like
       try {
         const result = await generateFinancialData();
         const recordsWithId = result.records.map(r => ({...r, id: Math.random().toString(36).substr(2, 9)}));
         setRecords(recordsWithId);
       } catch (err) {
         console.error("Failed to load records:", err);
-        setError("Unable to generate example data. You can still add your own manually.");
         setRecords([]);
       } finally {
         setLoading(false);
@@ -56,7 +50,6 @@ const App: React.FC = () => {
     initData();
   }, []);
 
-  // Recalculate balances whenever records change
   const processedRecords = useMemo(() => {
     const sorted = [...records].sort((a, b) => 
       MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month)
@@ -73,9 +66,7 @@ const App: React.FC = () => {
       };
     });
 
-    // Auto-save to local storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(final));
-
     return final;
   }, [records]);
 
@@ -85,12 +76,7 @@ const App: React.FC = () => {
     const uniqueContributors = new Set(processedRecords.flatMap(r => r.contributorNames)).size;
     const finalBalance = processedRecords.length > 0 ? processedRecords[processedRecords.length - 1].cumulativeBalance : 0;
 
-    return {
-      totalCollected,
-      totalDistributed,
-      uniqueContributors,
-      finalBalance
-    };
+    return { totalCollected, totalDistributed, uniqueContributors, finalBalance };
   }, [processedRecords]);
 
   const toggleRole = () => {
@@ -102,14 +88,9 @@ const App: React.FC = () => {
 
   const handleSaveRecord = (formData: Partial<MonthlyRecord>) => {
     if (editingRecord) {
-      // Update
       setRecords(prev => prev.map(r => r.id === editingRecord.id ? { ...r, ...formData } as MonthlyRecord : r));
     } else {
-      // Add
-      const newRecord = {
-        ...formData,
-        id: Math.random().toString(36).substr(2, 9),
-      } as MonthlyRecord;
+      const newRecord = { ...formData, id: Math.random().toString(36).substr(2, 9) } as MonthlyRecord;
       setRecords(prev => [...prev, newRecord]);
     }
     setIsModalOpen(false);
@@ -117,7 +98,7 @@ const App: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
+    if (window.confirm('Delete this month\'s record?')) {
       setRecords(prev => prev.filter(r => r.id !== id));
     }
   };
@@ -127,176 +108,128 @@ const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const resetToDemo = async () => {
-    if (window.confirm('Reset all data and fetch fresh example records from AI?')) {
-      setLoading(true);
-      try {
-        const result = await generateFinancialData();
-        const recordsWithId = result.records.map(r => ({...r, id: Math.random().toString(36).substr(2, 9)}));
-        setRecords(recordsWithId);
-      } catch (err) {
-        setError("Reset failed.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const clearAllData = () => {
-    if (window.confirm('Are you sure you want to delete ALL records? This will let you start entering your own data from scratch.')) {
-      setRecords([]);
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-        <h2 className="text-slate-800 font-bold text-2xl mb-2">Preparing Ledger</h2>
-        <p className="text-slate-500 animate-pulse text-lg max-w-sm">Synchronizing your local records...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
+        <div className="relative">
+            <div className="w-24 h-24 border-[6px] border-slate-50 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+                <i className="fa-solid fa-vault text-blue-600 text-2xl animate-pulse"></i>
+            </div>
+        </div>
+        <h2 className="text-slate-900 font-extrabold text-2xl mt-8 tracking-tight">Accessing Vault...</h2>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 selection:bg-blue-100 selection:text-blue-900">
-      {/* Header */}
-      <nav className="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-2xl text-white shadow-lg shadow-blue-200">
-                <i className="fa-solid fa-vault text-2xl"></i>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">CommunityFund</h1>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.2em]">PKR Ledger System</p>
-              </div>
+    <div className="min-h-screen pb-24 text-slate-900">
+      <nav className="glass sticky top-0 z-[80] border-b border-slate-100 px-6 sm:px-12 py-5 shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4 group cursor-pointer">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200 group-hover:rotate-6 transition-transform">
+              <i className="fa-solid fa-vault text-xl"></i>
             </div>
-            
-            <div className="flex items-center gap-6">
-              <div className="hidden md:flex flex-col items-end">
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full cursor-pointer hover:bg-slate-200 transition-colors" onClick={toggleRole}>
-                  <span className={`w-2 h-2 rounded-full ${user.role === 'admin' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{user.role} Access</span>
-                </div>
-              </div>
-              
-              <div className="h-8 w-[1px] bg-slate-200"></div>
-              
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-800">{user.name}</p>
-                  <button 
-                    onClick={toggleRole}
-                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest block transition-colors"
-                  >
-                    {user.role === 'admin' ? 'Logout' : 'Admin Login'}
-                  </button>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white shadow-sm overflow-hidden group cursor-pointer" onClick={toggleRole}>
-                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.role}`} alt="Avatar" />
-                </div>
-              </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight leading-none gradient-text">Ledgerly</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Community Fund Pro</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className={`w-2 h-2 rounded-full ${user.role === 'admin' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{user.role}</span>
+            </div>
+            <button 
+                onClick={toggleRole}
+                className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-95"
+            >
+                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center overflow-hidden">
+                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.role}&backgroundColor=b6e3f4`} alt="Avatar" />
+                </div>
+                <div className="text-left hidden xs:block">
+                  <p className="text-xs font-bold text-slate-800 leading-none">{user.name}</p>
+                  <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Switch Mode</p>
+                </div>
+            </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <div className="mb-10 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 text-blue-600 font-bold text-sm uppercase tracking-widest">
-              <span className="w-8 h-[2px] bg-blue-600"></span>
-              Fund Management Dashboard
-            </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Your Community Ledger</h2>
-            <p className="text-slate-500 max-w-2xl text-lg font-medium">
-              Start adding your own monthly records to keep track of collections and distributions.
+      <main className="max-w-7xl mx-auto px-6 sm:px-12 mt-16">
+        <header className="mb-16 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div>
+            <h2 className="text-5xl sm:text-6xl font-black tracking-tight text-slate-900 mb-2 leading-[1.05]">
+              Money Management <br/>
+              <span className="gradient-text">Chart</span>
+            </h2>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-4 flex items-center gap-2">
+              <span className="w-8 h-[2.5px] bg-blue-600"></span>
+              Live Community Analytics
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-3">
-            <button 
-              onClick={clearAllData}
-              className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-rose-600 font-bold flex items-center gap-2 hover:bg-rose-50 hover:border-rose-100 transition-all text-sm shadow-sm"
-            >
-              <i className="fa-solid fa-trash-arrow-up"></i>
-              Clear All Data
-            </button>
-            <button 
-              onClick={resetToDemo}
-              className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-slate-700 font-bold flex items-center gap-2 hover:bg-slate-50 hover:border-slate-200 transition-all text-sm shadow-sm"
-            >
-              <i className="fa-solid fa-wand-sparkles"></i>
-              Demo Data
-            </button>
-            {user.role === 'admin' && (
-              <button 
+          <div className="flex items-center gap-4">
+             <button 
                 onClick={() => { setEditingRecord(null); setIsModalOpen(true); }}
-                className="bg-blue-600 px-6 py-3 rounded-2xl text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition-all text-sm shadow-xl shadow-blue-200 active:scale-95"
-              >
+                className="gradient-btn px-10 py-5 rounded-[1.5rem] text-white font-extrabold flex items-center gap-3 active:scale-95 shadow-xl shadow-blue-100 text-lg"
+             >
                 <i className="fa-solid fa-plus-circle"></i>
                 Add Record
-              </button>
-            )}
+             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Dashboard Cards */}
         <SummaryCards summary={summary} />
 
-        {/* Analytics Charts - Only show if data exists */}
-        {processedRecords.length > 0 ? (
-          <FinancialChart records={processedRecords} />
-        ) : (
-          <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-slate-200 text-center mb-8">
-             <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i className="fa-solid fa-chart-line"></i>
-             </div>
-             <p className="text-slate-400 font-medium">Add records to see financial trends and analytics.</p>
+        <div className="grid grid-cols-1 gap-12">
+          <div className="bg-white/40 p-2 rounded-[2.5rem] border border-white/50 backdrop-blur-sm shadow-xl shadow-slate-200/40">
+            <FinancialChart records={processedRecords} />
           </div>
-        )}
-
-        {/* Data Table */}
-        <FinancialTable 
-          records={processedRecords} 
-          role={user.role}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        {/* Sync Status / Footer */}
-        <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-800 text-white p-8 rounded-[2rem] shadow-2xl shadow-slate-200">
-          <div className="flex items-center gap-6">
-            <div className="bg-emerald-500/20 p-4 rounded-2xl text-emerald-400">
-              <i className="fa-solid fa-database text-3xl"></i>
-            </div>
-            <div>
-              <h4 className="text-xl font-bold mb-1">Local Data Storage Active</h4>
-              <p className="text-slate-400 text-sm max-w-sm">
-                All changes are saved automatically to your browser. Use the export feature for manual backups.
-              </p>
-            </div>
-          </div>
-          <div className="w-full md:w-auto flex gap-4">
-             <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-700 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=user${i}`} alt="user" />
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-600 flex items-center justify-center text-[10px] font-bold">
-                  +{summary.uniqueContributors}
+          
+          <section className="space-y-8">
+            <div className="flex items-center justify-between px-2">
+                <div>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">Financial Timeline</h3>
+                    <p className="text-slate-400 text-sm font-semibold mt-1">Detailed history including full participant lists</p>
                 </div>
-             </div>
-             <div className="h-10 w-[1px] bg-slate-700 hidden md:block"></div>
-             <p className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Active System
-             </p>
-          </div>
+            </div>
+            <FinancialTable 
+              records={processedRecords} 
+              role={user.role}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </section>
+        </div>
+
+        <div className="mt-24 bg-slate-900 rounded-[3.5rem] p-12 relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] -mr-40 -mt-40"></div>
+           
+           <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-12 text-white">
+              <div className="space-y-6">
+                <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-blue-400 text-2xl border border-white/10 backdrop-blur-xl">
+                   <i className="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <h4 className="text-3xl font-black tracking-tight mb-3">Audit-Ready Reporting</h4>
+                  <p className="text-slate-400 max-w-lg text-lg leading-relaxed">
+                     Every PKR collected and spent is tracked with itemized relief distributions. Your records are secured locally on this device.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-8 p-8 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
+                 <div className="text-right">
+                    <p className="text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-1">Status</p>
+                    <p className="text-white text-2xl font-black">Secure & Local</p>
+                 </div>
+                 <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 text-3xl border border-emerald-500/30">
+                    <i className="fa-solid fa-check-double"></i>
+                 </div>
+              </div>
+           </div>
         </div>
       </main>
 

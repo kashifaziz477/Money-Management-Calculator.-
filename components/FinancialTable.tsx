@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MonthlyRecord, Role } from '../types';
 
@@ -11,101 +10,113 @@ interface FinancialTableProps {
 
 const FinancialTable: React.FC<FinancialTableProps> = ({ records, role, onEdit, onDelete }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-        <h2 className="text-lg font-bold text-slate-800">Financial Records</h2>
-        <div className="flex gap-2">
-          <span className={`px-3 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${role === 'admin' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
-            {role === 'admin' ? 'Admin Mode' : 'View Only'}
-          </span>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
+    <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <th className="px-6 py-4">Month</th>
-              <th className="px-6 py-4">Contributors</th>
-              <th className="px-6 py-4">Collected (Rs.)</th>
-              <th className="px-6 py-4">Given (Rs.)</th>
-              <th className="px-6 py-4">Monthly Balance</th>
-              <th className="px-6 py-4">Cumulative Total</th>
-              {role === 'admin' && <th className="px-6 py-4 text-center">Actions</th>}
+            <tr className="bg-slate-50/50 text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] border-b border-slate-100">
+              <th className="px-8 py-7">Timeline</th>
+              <th className="px-8 py-7">Participants (Full Names)</th>
+              <th className="px-8 py-7">Collections</th>
+              <th className="px-8 py-7">Distributions</th>
+              <th className="px-8 py-7">Balance</th>
+              {role === 'admin' && <th className="px-8 py-7 text-center">Settings</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-50">
             {records.length === 0 ? (
               <tr>
-                <td colSpan={role === 'admin' ? 7 : 6} className="px-6 py-20 text-center">
-                  <div className="max-w-xs mx-auto">
-                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                      <i className="fa-solid fa-folder-open"></i>
+                <td colSpan={role === 'admin' ? 6 : 5} className="px-8 py-32 text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-3xl flex items-center justify-center mb-6 text-3xl">
+                      <i className="fa-solid fa-inbox"></i>
                     </div>
-                    <h3 className="text-slate-800 font-bold text-lg mb-1">No data found</h3>
-                    <p className="text-slate-500 text-sm mb-6">
-                      Your ledger is currently empty. Start by adding your first monthly record using the button above.
-                    </p>
+                    <h3 className="text-xl font-bold text-slate-800">Vault is empty</h3>
+                    <p className="text-slate-400 max-w-xs mt-2 text-sm">Add records to see participant details.</p>
                   </div>
                 </td>
               </tr>
             ) : (
               records.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50 transition-colors group/row">
-                  <td className="px-6 py-4 font-bold text-slate-700">{row.month}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    <div className="max-w-[180px] truncate" title={row.contributorNames.join(', ')}>
-                      {row.contributorNames.join(', ')}
+                <tr key={row.id} className="hover:bg-blue-50/30 transition-all group/row">
+                  <td className="px-8 py-7">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
+                        <span className="font-extrabold text-slate-900 text-lg tracking-tight">{row.month}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-bold text-emerald-600">Rs. {row.amountCollected.toLocaleString()}</td>
-                  <td className="px-6 py-4 relative group">
+                  <td className="px-8 py-7">
+                    <div className="flex flex-wrap gap-2 max-w-[300px]">
+                        {row.contributorNames.map((name, i) => (
+                          <span key={i} className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[11px] font-bold text-slate-600 shadow-sm hover:border-blue-200 hover:text-blue-600 transition-colors whitespace-nowrap">
+                            {name}
+                          </span>
+                        ))}
+                    </div>
+                  </td>
+                  <td className="px-8 py-7">
                     <div className="flex flex-col">
-                       <span className="font-bold text-rose-500">Rs. {row.amountGiven.toLocaleString()}</span>
+                        <span className="font-black text-emerald-600">Rs. {row.amountCollected.toLocaleString()}</span>
+                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Inflow</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-7 relative group">
+                    <div className="flex flex-col cursor-pointer">
+                       <span className="font-black text-rose-500 flex items-center gap-2">
+                         Rs. {row.amountGiven.toLocaleString()}
+                         <i className="fa-solid fa-circle-info text-[10px] opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                       </span>
                        {row.distributions && row.distributions.length > 0 && (
-                         <span className="text-[10px] text-slate-400 font-medium">
-                           {row.distributions.length} recipients
+                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                           {row.distributions.length} Relief Recipients
                          </span>
                        )}
                     </div>
-                    {/* Hover detail box */}
+                    {/* Hover detail toolip */}
                     {row.distributions && row.distributions.length > 0 && (
-                      <div className="absolute left-6 top-full mt-1 hidden group-hover:block z-[60] bg-slate-800 text-white text-[11px] p-3 rounded-xl shadow-xl w-48 border border-slate-700">
-                         <div className="font-bold mb-2 border-b border-slate-700 pb-1 uppercase tracking-tighter">Recipients</div>
-                         <div className="space-y-1.5">
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 hidden group-hover:block z-[90] glass text-slate-800 text-xs p-6 rounded-3xl shadow-2xl w-72 border border-slate-100 animate-in fade-in zoom-in duration-200">
+                         <div className="font-black text-[10px] text-slate-400 uppercase tracking-[0.2em] mb-4 flex justify-between">
+                            <span>Detailed Breakdown</span>
+                            <i className="fa-solid fa-heart-pulse text-rose-400"></i>
+                         </div>
+                         <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
                             {row.distributions.map((d, i) => (
-                              <div key={i} className="flex justify-between items-center gap-2">
-                                <span className="truncate max-w-[100px]">{d.recipient}</span>
-                                <span className="font-mono text-slate-400">Rs.{d.amount.toLocaleString()}</span>
+                              <div key={i} className="flex justify-between items-center gap-3 bg-slate-50/50 p-2 rounded-xl">
+                                <span className="font-bold truncate max-w-[120px] text-slate-700">{d.recipient}</span>
+                                <span className="font-black text-slate-900 bg-white px-2 py-1 rounded-lg text-[10px] shadow-sm">Rs.{d.amount.toLocaleString()}</span>
                               </div>
                             ))}
                          </div>
                       </div>
                     )}
                   </td>
-                  <td className={`px-6 py-4 font-semibold ${row.remainingBalance >= 0 ? 'text-slate-700' : 'text-rose-600'}`}>
-                    Rs. {row.remainingBalance.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg font-bold text-sm">
-                      Rs. {row.cumulativeBalance.toLocaleString()}
-                    </span>
+                  <td className="px-8 py-7">
+                    <div className="inline-flex flex-col">
+                        <span className={`font-black text-lg ${row.remainingBalance >= 0 ? 'text-slate-900' : 'text-rose-600'}`}>
+                           Rs. {row.cumulativeBalance.toLocaleString()}
+                        </span>
+                        <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest mt-1 ${row.remainingBalance >= 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                           {row.remainingBalance >= 0 ? <i className="fa-solid fa-arrow-up text-[8px]"></i> : <i className="fa-solid fa-arrow-down text-[8px]"></i>}
+                           {row.remainingBalance.toLocaleString()} Net
+                        </div>
+                    </div>
                   </td>
                   {role === 'admin' && (
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                    <td className="px-8 py-7 text-center">
+                      <div className="flex justify-center gap-3 opacity-0 group-hover/row:opacity-100 transition-all transform group-hover/row:translate-x-0 translate-x-4">
                         <button 
                           onClick={() => onEdit(row)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="w-11 h-11 flex items-center justify-center bg-white border border-slate-100 text-blue-600 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm"
                           title="Edit"
                         >
-                          <i className="fa-solid fa-pen-to-square"></i>
+                          <i className="fa-solid fa-pen-nib text-sm"></i>
                         </button>
                         <button 
                           onClick={() => onDelete(row.id)}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="w-11 h-11 flex items-center justify-center bg-white border border-slate-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl transition-all shadow-sm"
                           title="Delete"
                         >
-                          <i className="fa-solid fa-trash-can"></i>
+                          <i className="fa-solid fa-trash-can text-sm"></i>
                         </button>
                       </div>
                     </td>

@@ -64,119 +64,127 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSave, init
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl my-8 overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 className="text-xl font-bold text-slate-800">
-            {initialData ? 'Edit Record' : 'Add New Record'}
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto custom-scrollbar">
+      <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl my-auto overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-12 duration-500">
+        <div className="p-10 pb-4 border-b border-slate-50 flex justify-between items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">
+               <i className="fa-solid fa-file-invoice-dollar"></i> Data Entry
+            </div>
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight">
+              {initialData ? 'Refine Record' : 'Log Monthly Stats'}
+            </h3>
+          </div>
+          <button onClick={onClose} className="w-12 h-12 bg-slate-50 text-slate-400 hover:text-slate-800 rounded-full flex items-center justify-center transition-all hover:rotate-90">
             <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Select Month</label>
+
+        <form onSubmit={handleSubmit} className="p-10 pt-8 space-y-10">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Timeline</label>
               <select 
                 value={month} 
                 onChange={(e) => setMonth(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none cursor-pointer"
               >
                 {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Total Collected (PKR)</label>
-              <input 
-                type="number"
-                value={collected}
-                onChange={(e) => setCollected(Number(e.target.value))}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-emerald-600"
-                required
-              />
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Gross Inflow (PKR)</label>
+              <div className="relative">
+                <input 
+                  type="number"
+                  value={collected}
+                  onChange={(e) => setCollected(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 font-black text-emerald-600 text-xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all pl-16"
+                  required
+                />
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-600/50 font-bold">Rs.</span>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Contributors (comma separated)</label>
+          <section className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Contributors</label>
             <input 
               type="text"
               value={contributors}
               onChange={(e) => setContributors(e.target.value)}
-              placeholder="e.g. Ali, Fatima, Omar"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="Names separated by comma..."
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
               required
             />
-          </div>
+          </section>
 
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-bold text-slate-800">Distributions (Giving Money)</label>
+          <section className="space-y-6">
+            <div className="flex justify-between items-center px-1">
+              <div>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Outflow & Distributions</label>
+                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Track every rupee sent</p>
+              </div>
               <button 
                 type="button"
                 onClick={handleAddDistribution}
-                className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 transition-colors flex items-center gap-1"
+                className="group flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold hover:bg-blue-600 transition-all active:scale-95 shadow-lg shadow-black/10"
               >
-                <i className="fa-solid fa-plus text-[10px]"></i>
+                <i className="fa-solid fa-plus-circle text-blue-400"></i>
                 Add Recipient
               </button>
             </div>
             
-            <div className="max-h-[250px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+            <div className="max-h-[300px] overflow-y-auto space-y-4 pr-3 custom-scrollbar p-1">
               {distributions.map((dist, idx) => (
-                <div key={idx} className="flex gap-3 items-start animate-in slide-in-from-left-2">
-                  <div className="flex-1">
+                <div key={idx} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center p-1 group/item">
+                  <input 
+                    type="text"
+                    placeholder="E.g. Relief Fund"
+                    value={dist.recipient}
+                    onChange={(e) => handleUpdateDistribution(idx, 'recipient', e.target.value)}
+                    className="bg-slate-50 border border-slate-100 rounded-xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-blue-50 outline-none transition-all w-full"
+                  />
+                  <div className="relative">
                     <input 
-                      type="text"
-                      placeholder="Recipient Name"
-                      value={dist.recipient}
-                      onChange={(e) => handleUpdateDistribution(idx, 'recipient', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                        type="number"
+                        placeholder="Amount"
+                        value={dist.amount}
+                        onChange={(e) => handleUpdateDistribution(idx, 'amount', Number(e.target.value))}
+                        className="bg-slate-50 border border-slate-100 rounded-xl px-5 py-3.5 pl-10 text-sm font-black text-rose-500 focus:ring-4 focus:ring-rose-50 outline-none transition-all w-32"
                     />
-                  </div>
-                  <div className="w-32">
-                    <input 
-                      type="number"
-                      placeholder="Amount"
-                      value={dist.amount}
-                      onChange={(e) => handleUpdateDistribution(idx, 'amount', Number(e.target.value))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none font-semibold"
-                    />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-300 font-bold text-[10px]">Rs.</span>
                   </div>
                   <button 
                     type="button"
                     onClick={() => handleRemoveDistribution(idx)}
-                    className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                    className="w-12 h-12 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                   >
-                    <i className="fa-solid fa-trash-can"></i>
+                    <i className="fa-solid fa-trash-can text-sm"></i>
                   </button>
                 </div>
               ))}
-              {distributions.length === 0 && (
-                <p className="text-center py-4 text-slate-400 text-sm italic">No distributions recorded for this month.</p>
-              )}
             </div>
             
-            <div className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center">
-              <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">Total Distributed</span>
-              <span className="text-lg font-black text-rose-600">Rs. {totalGiven.toLocaleString()}</span>
+            <div className="p-8 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-[2rem] border border-slate-100 flex flex-col items-center gap-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Calculated Monthly Outflow</span>
+              <span className="text-4xl font-black text-slate-900 tracking-tight">Rs. {totalGiven.toLocaleString()}</span>
             </div>
-          </div>
+          </section>
 
-          <div className="pt-4 flex gap-3 sticky bottom-0 bg-white">
+          <div className="flex gap-4 pt-4">
             <button 
               type="button" 
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all"
+              className="px-10 py-5 rounded-2xl font-black text-slate-400 hover:bg-slate-100 transition-all"
             >
-              Cancel
+              Discard
             </button>
             <button 
               type="submit"
-              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+              className="flex-1 px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95"
             >
-              {initialData ? 'Update Monthly Record' : 'Save Monthly Record'}
+              {initialData ? 'Sync Changes' : 'Confirm Entry'}
             </button>
           </div>
         </form>
